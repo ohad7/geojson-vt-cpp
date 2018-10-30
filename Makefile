@@ -1,4 +1,4 @@
-CXXFLAGS += -I include -std=c++14 -Wall -Wextra -D_GLIBCXX_USE_CXX11_ABI=0
+CXXFLAGS += -I include -std=c++14 -Wall -Wextra -D_GLIBCXX_USE_CXX11_ABI=0 -fPIC
 RELEASE_FLAGS ?= -O3 -DNDEBUG
 DEBUG_FLAGS ?= -g -O0 -DDEBUG
 
@@ -22,8 +22,23 @@ GTEST_FLAGS = `$(MASON) cflags $(GTEST)` `$(MASON) static_libs $(GTEST)` `$(MASO
 RAPIDJSON_FLAGS = `$(MASON) cflags $(RAPIDJSON)`
 BASE_FLAGS = $(VARIANT_FLAGS) $(GEOMETRY_FLAGS) $(GEOJSON_FLAGS)
 
-JAVA_HOME=$(shell /usr/libexec/java_home)
-JNIHPP_FLAGS = `$(MASON) cflags $(JNIHPP)` -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/darwin
+
+UNAME_S := $(shell uname -s)
+	ifeq ($(UNAME_S),Linux)
+		SHARED_OBJECT_SUFFIX="so"
+		JNI_FLAGS=-I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/linux
+		SO_FLAG=-shared
+		CXX_COMMAND=g++-5		# Compilation with lower versions results in error
+	endif
+	ifeq ($(UNAME_S),Darwin)
+		JAVA_HOME=$(shell /usr/libexec/java_home)
+		JNI_FLAGS=-I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/darwin
+		SO_FLAG=-dynamiclib
+		CXX_COMMAND=$(CXX)
+	endif
+	
+
+JNIHPP_FLAGS = `$(MASON) cflags $(JNIHPP)` $(JNI_FLAGS)
 VTZERO_FLAGS = `$(MASON) cflags $(VTZERO)`
 PROTOZERO_FLAGS = `$(MASON) cflags $(PROTOZERO)`
 
@@ -72,5 +87,5 @@ clean:
 	rm -rf build
 
 jni: build $(DEPS)
-	$(CXX) $(CFLAGS) $(CXXFLAGS) $(RELEASE_FLAGS) $(JNIHPP_FLAGS) $(VTZERO_FLAGS) $(PROTOZERO_FLAGS) $(TILER_CLASS_NAME_FLAGS) $(BASE_FLAGS) $(RAPIDJSON_FLAGS) jni/tiler.cpp -dynamiclib -o build/libtiler.jnilib
+	$(CXX) $(CFLAGS) $(CXXFLAGS) $(RELEASE_FLAGS) $(JNIHPP_FLAGS) $(VTZERO_FLAGS) $(PROTOZERO_FLAGS) $(TILER_CLASS_NAME_FLAGS) $(BASE_FLAGS) $(RAPIDJSON_FLAGS) jni/tiler.cpp $(SO_FLAG) -o build/libtiler.jnilib
 

@@ -41,7 +41,7 @@ std::map<std::string, GeoJSONVT> tilesIndexMap;
 static void RegisterTilerClass(JavaVM* vm)
 {
   jni::JNIEnv& env { jni::GetEnv(*vm) };
- 
+
   /**
    * Load Geojson file into the tile index map internal cache.
    */
@@ -53,7 +53,7 @@ static void RegisterTilerClass(JavaVM* vm)
     GeoJSONVT index{ geojson.get<mapbox::geojson::feature_collection>() };
     tilesIndexMap.insert(std::make_pair(key, index));
   };
-  
+
   /**
    * Unload Geojson file from the tile index map internal cache. Will release all resources taken
    * by this index
@@ -63,7 +63,7 @@ static void RegisterTilerClass(JavaVM* vm)
     cout << "Native Tiler::unload with Key:" << key << endl;
     tilesIndexMap.erase(key);
   };
-  
+
   /**
    * Get tile by index key and (z,x,y)
    */
@@ -76,12 +76,12 @@ static void RegisterTilerClass(JavaVM* vm)
     }
     // cout << "Calling getTile" << endl;
     auto resultTile = index->second.getTile(z, x, y);
-    
+
     vtzero::tile_builder tile;
     vtzero::layer_builder defaultLayer { tile, "default" };
-    
+
     vtzero::value_index<vtzero::sint_value_type, int32_t, std::unordered_map> maxspeed_index{defaultLayer};
-    
+
     for (unsigned long i=0; i<resultTile.features.size(); i++) {
       auto geometry = resultTile.features[i].geometry;
       const auto& lineString = geometry.get<mapbox::geometry::line_string<int16_t>>();
@@ -89,10 +89,10 @@ static void RegisterTilerClass(JavaVM* vm)
       if (measure(lineString) == 0.0) {
         continue;
       }
-      
+
       vtzero::linestring_feature_builder feature{defaultLayer};
       feature.add_linestring(lineString.size());
-      
+
       for (unsigned long j=0; j<lineString.size(); j++) {
         feature.set_point(lineString[j].x, lineString[j].y);
       }
@@ -116,7 +116,7 @@ static void RegisterTilerClass(JavaVM* vm)
       }
       feature.commit();
     }
-    
+
     const auto result = tile.serialize();
     return jni::Make<jni::Array<jni::jbyte>>(env, result);
   };
