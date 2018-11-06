@@ -28,7 +28,7 @@ UNAME_S := $(shell uname -s)
 		SHARED_OBJECT_SUFFIX="so"
 		JNI_FLAGS=-I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/linux
 		SO_FLAG=-shared
-		CXX_COMMAND=g++-5		# Compilation with lower versions results in error
+		CXX_COMMAND=g++-6		# Compilation with lower versions results in error
 	endif
 	ifeq ($(UNAME_S),Darwin)
 		JAVA_HOME=$(shell /usr/libexec/java_home)
