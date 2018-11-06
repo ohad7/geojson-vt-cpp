@@ -28,7 +28,7 @@ UNAME_S := $(shell uname -s)
 		SHARED_OBJECT_SUFFIX="so"
 		JNI_FLAGS=-I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/linux
 		SO_FLAG=-shared
-		CXX_COMMAND=g++-6		# Compilation with lower versions results in error
+		CXX_COMMAND=g++-8		# Compilation with lower versions results in error
 	endif
 	ifeq ($(UNAME_S),Darwin)
 		JAVA_HOME=$(shell /usr/libexec/java_home)
@@ -87,5 +87,5 @@ clean:
 	rm -rf build
 
 jni: build $(DEPS)
-	$(CXX) $(CFLAGS) $(CXXFLAGS) $(RELEASE_FLAGS) $(JNIHPP_FLAGS) $(VTZERO_FLAGS) $(PROTOZERO_FLAGS) $(TILER_CLASS_NAME_FLAGS) $(BASE_FLAGS) $(RAPIDJSON_FLAGS) jni/tiler.cpp $(SO_FLAG) -o build/libtiler.jnilib
+	$(CXX_COMMAND) $(CFLAGS) $(CXXFLAGS) $(RELEASE_FLAGS) $(JNIHPP_FLAGS) $(VTZERO_FLAGS) $(PROTOZERO_FLAGS) $(TILER_CLASS_NAME_FLAGS) $(BASE_FLAGS) $(RAPIDJSON_FLAGS) jni/tiler.cpp $(SO_FLAG) -o build/libtiler.jnilib
 
