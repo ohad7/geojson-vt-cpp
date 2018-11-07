@@ -87,5 +87,6 @@ clean:
 	rm -rf build
 
 jni: build $(DEPS)
-	$(CXX_COMMAND) $(CFLAGS) $(CXXFLAGS) $(RELEASE_FLAGS) $(JNIHPP_FLAGS) $(VTZERO_FLAGS) $(PROTOZERO_FLAGS) $(TILER_CLASS_NAME_FLAGS) $(BASE_FLAGS) $(RAPIDJSON_FLAGS) jni/tiler.cpp $(SO_FLAG) -o build/libtiler.jnilib
+	mkdir -p build/jni/native
+	$(CXX_COMMAND) $(CFLAGS) $(CXXFLAGS) $(RELEASE_FLAGS) $(JNIHPP_FLAGS) $(VTZERO_FLAGS) $(PROTOZERO_FLAGS) $(TILER_CLASS_NAME_FLAGS) $(BASE_FLAGS) $(RAPIDJSON_FLAGS) jni/tiler.cpp $(SO_FLAG) -o build/jni/native/libtiler.jnilib
 
