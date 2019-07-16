@@ -110,8 +110,8 @@ static void handleFeature(mapbox::geometry::feature<int16_t>& feature, vtzero::l
 	cout << "geometry type: 2/polygon";
 	handlePolygonFeature(feature, defaultLayer);
 	break;
-//  default:
-	  // throw new exception
+  default:
+	throw std::runtime_error("unsupported geometry type");
   }
 }
 
@@ -163,68 +163,7 @@ static void RegisterTilerClass(JavaVM* vm)
       cout << "feature " << i << endl;
       //feature
       auto& feature = resultTile.features[i];
-//      auto geometry = feature.geometry;
       handleFeature(feature, defaultLayer);
-
-
-//      cout << "geometry " << geometry.which() << endl;
-//      const auto& lineString = geometry.get<mapbox::geometry::line_string<int16_t>>();
-//      cout << "line string " << i << endl;
-//      // Check that the line string is not zero length
-//      if (measure(lineString) == 0.0) {
-//    	  cout << "measure is zero, skipping " << i << endl;
-//        continue;
-//      }
-//
-//      vtzero::linestring_feature_builder feature{defaultLayer};
-//      feature.add_linestring(lineString.size());
-//
-//      cout << "going over ppoints " << endl;
-//      for (unsigned long j=0; j<lineString.size(); j++) {
-//    	  cout << "setting point" << endl;
-//        feature.set_point(lineString[j].x, lineString[j].y);
-//      }
-
-
-//      const auto& polygon = geometry.get<mapbox::geometry::polygon<int16_t>>();
-//      vtzero::polygon_feature_builder feature{defaultLayer};
-//
-//      vtzero::point previous{polygon[0][0].x + 1, polygon[0][0].y + 2};
-//      for (unsigned long j=0; j<polygon.size(); j++) {
-//    	  cout << "creating a polygon ring of size " << polygon[j].size() << endl;
-//    	  feature.add_ring(polygon[j].size());
-//    	  for (unsigned long k=0; k<polygon[j].size(); k++) {
-//     		  vtzero::point current_point{polygon[j][k].x, polygon[j][k].y};
-//     		  if (previous.x != current_point.x || previous.y != current_point.y) {
-//     			 cout << "x " << current_point.x << " y " << current_point.y << endl;
-//     			 feature.set_point(current_point);
-//     		  }
-//     		  else  {
-//     			  cout << "two consecutive points are the same. skipping point in polygon [j:" << j << "] k: [" << k << "]" << endl;
-//     		  }
-//     		  previous = current_point;
-//    	  }
-//      }
-//
-//      auto iterator = resultTile.features[i].properties.begin();
-//      while(iterator != resultTile.features[i].properties.end()) {
-//        int propertyType = iterator->second.which();
-//        switch(propertyType) {
-//          case 2:
-//            feature.add_property(iterator->first, (iterator->second).get<uint64_t>());
-//            break;
-//          case 4:
-//            feature.add_property(iterator->first, (iterator->second).get<double>());
-//            break;
-//          case 5:
-//            feature.add_property(iterator->first, (iterator->second).get<std::string>());
-//            break;
-//          default:
-//            throw std::runtime_error("Unknown variant type");
-//        }
-//        iterator++;
-//      }
-//      feature.commit();
     }
 
     const auto result = tile.serialize();
