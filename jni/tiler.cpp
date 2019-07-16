@@ -38,6 +38,83 @@ using namespace std;
 
 std::map<std::string, GeoJSONVT> tilesIndexMap;
 
+static void handleFeatureProperties(mapbox::geometry::feature<int16_t> geojson_feature, vtzero::feature_builder& feature_builder) {
+  auto iterator = geojson_feature.properties.begin();
+  while(iterator != geojson_feature.properties.end()) {
+	int propertyType = iterator->second.which();
+	switch(propertyType) {
+	  case 2:
+		  feature_builder.add_property(iterator->first, (iterator->second).get<uint64_t>());
+		break;
+	  case 4:
+		  feature_builder.add_property(iterator->first, (iterator->second).get<double>());
+		break;
+	  case 5:
+		  feature_builder.add_property(iterator->first, (iterator->second).get<std::string>());
+		break;
+	  default:
+		throw std::runtime_error("Unknown variant type");
+	}
+	iterator++;
+  }
+}
+
+static void handlePolygonFeature(mapbox::geometry::feature<int16_t>& geojson_feature, vtzero::layer_builder& defaultLayer) {
+	vtzero::polygon_feature_builder featureBuilder{defaultLayer};
+	mapbox::geometry::geometry<int16_t> geometry = geojson_feature.geometry;
+	const auto& polygon = geometry.get<mapbox::geometry::polygon<int16_t>>();
+	vtzero::point previous{polygon[0][0].x + 1, polygon[0][0].y + 2};
+	for (unsigned long j=0; j<polygon.size(); j++) {
+		cout << "creating a polygon ring of size " << polygon[j].size() << endl;
+		featureBuilder.add_ring(polygon[j].size());
+		for (unsigned long k=0; k<polygon[j].size(); k++) {
+			vtzero::point current_point{polygon[j][k].x, polygon[j][k].y};
+			if (previous.x != current_point.x || previous.y != current_point.y) {
+				cout << "x " << current_point.x << " y " << current_point.y << endl;
+				featureBuilder.set_point(current_point);
+			}
+			else  {
+				cout << "two consecutive points are the same. skipping point in polygon [j:" << j << "] k: [" << k << "]" << endl;
+			}
+			previous = current_point;
+		}
+	}
+	handleFeatureProperties(geojson_feature, featureBuilder);
+	featureBuilder.commit();
+}
+
+static void handleLineStringFeature(mapbox::geometry::feature<int16_t>& geojson_feature, vtzero::layer_builder& defaultLayer) {
+  const auto& lineString = geojson_feature.geometry.get<mapbox::geometry::line_string<int16_t>>();
+  // Check that the line string is not zero length
+  if (measure(lineString) == 0.0) {
+	return;
+  }
+
+  vtzero::linestring_feature_builder featureBuilder{defaultLayer};
+  featureBuilder.add_linestring(lineString.size());
+
+  for (unsigned long j=0; j<lineString.size(); j++) {
+	  featureBuilder.set_point(lineString[j].x, lineString[j].y);
+  }
+  handleFeatureProperties(geojson_feature, featureBuilder);
+  featureBuilder.commit();
+}
+
+static void handleFeature(mapbox::geometry::feature<int16_t>& feature, vtzero::layer_builder& defaultLayer) {
+
+  switch (feature.geometry.which()) {
+  case 1:
+	  handleLineStringFeature(feature, defaultLayer);
+	  break;
+  case 2:
+	cout << "geometry type: 2/polygon";
+	handlePolygonFeature(feature, defaultLayer);
+	break;
+//  default:
+	  // throw new exception
+  }
+}
+
 static void RegisterTilerClass(JavaVM* vm)
 {
   jni::JNIEnv& env { jni::GetEnv(*vm) };
@@ -83,38 +160,71 @@ static void RegisterTilerClass(JavaVM* vm)
     vtzero::value_index<vtzero::sint_value_type, int32_t, std::unordered_map> maxspeed_index{defaultLayer};
 
     for (unsigned long i=0; i<resultTile.features.size(); i++) {
-      auto geometry = resultTile.features[i].geometry;
-      const auto& lineString = geometry.get<mapbox::geometry::line_string<int16_t>>();
-      // Check that the line string is not zero length
-      if (measure(lineString) == 0.0) {
-        continue;
-      }
+      cout << "feature " << i << endl;
+      //feature
+      auto& feature = resultTile.features[i];
+//      auto geometry = feature.geometry;
+      handleFeature(feature, defaultLayer);
 
-      vtzero::linestring_feature_builder feature{defaultLayer};
-      feature.add_linestring(lineString.size());
 
-      for (unsigned long j=0; j<lineString.size(); j++) {
-        feature.set_point(lineString[j].x, lineString[j].y);
-      }
-      auto iterator = resultTile.features[i].properties.begin();
-      while(iterator != resultTile.features[i].properties.end()) {
-        int propertyType = iterator->second.which();
-        switch(propertyType) {
-          case 2:
-            feature.add_property(iterator->first, (iterator->second).get<uint64_t>());
-            break;
-          case 4:
-            feature.add_property(iterator->first, (iterator->second).get<double>());
-            break;
-          case 5:
-            feature.add_property(iterator->first, (iterator->second).get<std::string>());
-            break;
-          default:
-            throw std::runtime_error("Unknown variant type");
-        }
-        iterator++;
-      }
-      feature.commit();
+//      cout << "geometry " << geometry.which() << endl;
+//      const auto& lineString = geometry.get<mapbox::geometry::line_string<int16_t>>();
+//      cout << "line string " << i << endl;
+//      // Check that the line string is not zero length
+//      if (measure(lineString) == 0.0) {
+//    	  cout << "measure is zero, skipping " << i << endl;
+//        continue;
+//      }
+//
+//      vtzero::linestring_feature_builder feature{defaultLayer};
+//      feature.add_linestring(lineString.size());
+//
+//      cout << "going over ppoints " << endl;
+//      for (unsigned long j=0; j<lineString.size(); j++) {
+//    	  cout << "setting point" << endl;
+//        feature.set_point(lineString[j].x, lineString[j].y);
+//      }
+
+
+//      const auto& polygon = geometry.get<mapbox::geometry::polygon<int16_t>>();
+//      vtzero::polygon_feature_builder feature{defaultLayer};
+//
+//      vtzero::point previous{polygon[0][0].x + 1, polygon[0][0].y + 2};
+//      for (unsigned long j=0; j<polygon.size(); j++) {
+//    	  cout << "creating a polygon ring of size " << polygon[j].size() << endl;
+//    	  feature.add_ring(polygon[j].size());
+//    	  for (unsigned long k=0; k<polygon[j].size(); k++) {
+//     		  vtzero::point current_point{polygon[j][k].x, polygon[j][k].y};
+//     		  if (previous.x != current_point.x || previous.y != current_point.y) {
+//     			 cout << "x " << current_point.x << " y " << current_point.y << endl;
+//     			 feature.set_point(current_point);
+//     		  }
+//     		  else  {
+//     			  cout << "two consecutive points are the same. skipping point in polygon [j:" << j << "] k: [" << k << "]" << endl;
+//     		  }
+//     		  previous = current_point;
+//    	  }
+//      }
+//
+//      auto iterator = resultTile.features[i].properties.begin();
+//      while(iterator != resultTile.features[i].properties.end()) {
+//        int propertyType = iterator->second.which();
+//        switch(propertyType) {
+//          case 2:
+//            feature.add_property(iterator->first, (iterator->second).get<uint64_t>());
+//            break;
+//          case 4:
+//            feature.add_property(iterator->first, (iterator->second).get<double>());
+//            break;
+//          case 5:
+//            feature.add_property(iterator->first, (iterator->second).get<std::string>());
+//            break;
+//          default:
+//            throw std::runtime_error("Unknown variant type");
+//        }
+//        iterator++;
+//      }
+//      feature.commit();
     }
 
     const auto result = tile.serialize();
