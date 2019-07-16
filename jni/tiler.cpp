@@ -38,19 +38,19 @@ using namespace std;
 
 std::map<std::string, GeoJSONVT> tilesIndexMap;
 
-static void handleFeatureProperties(mapbox::geometry::feature<int16_t> geojson_feature, vtzero::feature_builder& feature_builder) {
-  auto iterator = geojson_feature.properties.begin();
-  while(iterator != geojson_feature.properties.end()) {
+static void handleFeatureProperties(mapbox::geometry::feature<int16_t> geojsonFeature, vtzero::feature_builder& featureBuilder) {
+  auto iterator = geojsonFeature.properties.begin();
+  while(iterator != geojsonFeature.properties.end()) {
 	int propertyType = iterator->second.which();
 	switch(propertyType) {
 	  case 2:
-		  feature_builder.add_property(iterator->first, (iterator->second).get<uint64_t>());
+		  featureBuilder.add_property(iterator->first, (iterator->second).get<uint64_t>());
 		break;
 	  case 4:
-		  feature_builder.add_property(iterator->first, (iterator->second).get<double>());
+		  featureBuilder.add_property(iterator->first, (iterator->second).get<double>());
 		break;
 	  case 5:
-		  feature_builder.add_property(iterator->first, (iterator->second).get<std::string>());
+		  featureBuilder.add_property(iterator->first, (iterator->second).get<std::string>());
 		break;
 	  default:
 		throw std::runtime_error("Unknown variant type");
@@ -59,9 +59,9 @@ static void handleFeatureProperties(mapbox::geometry::feature<int16_t> geojson_f
   }
 }
 
-static void handlePolygonFeature(mapbox::geometry::feature<int16_t>& geojson_feature, vtzero::layer_builder& defaultLayer) {
+static void handlePolygonFeature(mapbox::geometry::feature<int16_t>& geojsonFeature, vtzero::layer_builder& defaultLayer) {
 	vtzero::polygon_feature_builder featureBuilder{defaultLayer};
-	mapbox::geometry::geometry<int16_t> geometry = geojson_feature.geometry;
+	mapbox::geometry::geometry<int16_t> geometry = geojsonFeature.geometry;
 	const auto& polygon = geometry.get<mapbox::geometry::polygon<int16_t>>();
 	vtzero::point previous{polygon[0][0].x + 1, polygon[0][0].y + 2};
 	for (unsigned long j=0; j<polygon.size(); j++) {
@@ -79,12 +79,12 @@ static void handlePolygonFeature(mapbox::geometry::feature<int16_t>& geojson_fea
 			previous = current_point;
 		}
 	}
-	handleFeatureProperties(geojson_feature, featureBuilder);
+	handleFeatureProperties(geojsonFeature, featureBuilder);
 	featureBuilder.commit();
 }
 
-static void handleLineStringFeature(mapbox::geometry::feature<int16_t>& geojson_feature, vtzero::layer_builder& defaultLayer) {
-  const auto& lineString = geojson_feature.geometry.get<mapbox::geometry::line_string<int16_t>>();
+static void handleLineStringFeature(mapbox::geometry::feature<int16_t>& geojsonFeature, vtzero::layer_builder& defaultLayer) {
+  const auto& lineString = geojsonFeature.geometry.get<mapbox::geometry::line_string<int16_t>>();
   // Check that the line string is not zero length
   if (measure(lineString) == 0.0) {
 	return;
@@ -96,7 +96,7 @@ static void handleLineStringFeature(mapbox::geometry::feature<int16_t>& geojson_
   for (unsigned long j=0; j<lineString.size(); j++) {
 	  featureBuilder.set_point(lineString[j].x, lineString[j].y);
   }
-  handleFeatureProperties(geojson_feature, featureBuilder);
+  handleFeatureProperties(geojsonFeature, featureBuilder);
   featureBuilder.commit();
 }
 
