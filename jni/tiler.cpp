@@ -107,7 +107,6 @@ static void handleFeature(mapbox::geometry::feature<int16_t>& feature, vtzero::l
 	  handleLineStringFeature(feature, defaultLayer);
 	  break;
   case 2:
-	cout << "geometry type: 2/polygon";
 	handlePolygonFeature(feature, defaultLayer);
 	break;
   default:
