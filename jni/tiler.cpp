@@ -65,16 +65,16 @@ static void handlePolygonFeature(mapbox::geometry::feature<int16_t>& geojsonFeat
 	const auto& polygon = geometry.get<mapbox::geometry::polygon<int16_t>>();
 	vtzero::point previous{polygon[0][0].x + 1, polygon[0][0].y + 2};
 	for (unsigned long j=0; j<polygon.size(); j++) {
-		cout << "creating a polygon ring of size " << polygon[j].size() << endl;
+//		cout << "creating a polygon ring of size " << polygon[j].size() << endl;
 		featureBuilder.add_ring(polygon[j].size());
 		for (unsigned long k=0; k<polygon[j].size(); k++) {
 			vtzero::point current_point{polygon[j][k].x, polygon[j][k].y};
 			if (previous.x != current_point.x || previous.y != current_point.y) {
-				cout << "x " << current_point.x << " y " << current_point.y << endl;
+//				cout << "x " << current_point.x << " y " << current_point.y << endl;
 				featureBuilder.set_point(current_point);
 			}
 			else  {
-				cout << "two consecutive points are the same. skipping point in polygon [j:" << j << "] k: [" << k << "]" << endl;
+//				cout << "two consecutive points are the same. skipping point in polygon [j:" << j << "] k: [" << k << "]" << endl;
 			}
 			previous = current_point;
 		}
@@ -159,7 +159,7 @@ static void RegisterTilerClass(JavaVM* vm)
     vtzero::value_index<vtzero::sint_value_type, int32_t, std::unordered_map> maxspeed_index{defaultLayer};
 
     for (unsigned long i=0; i<resultTile.features.size(); i++) {
-      cout << "feature " << i << endl;
+//      cout << "feature " << i << endl;
       //feature
       auto& feature = resultTile.features[i];
       handleFeature(feature, defaultLayer);
