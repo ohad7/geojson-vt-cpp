@@ -43,6 +43,9 @@ static void handleFeatureProperties(mapbox::geometry::feature<int16_t> geojsonFe
   while(iterator != geojsonFeature.properties.end()) {
 	int propertyType = iterator->second.which();
 	switch(propertyType) {
+      case 1:
+    	  featureBuilder.add_property(iterator->first, (iterator->second).get<bool>());
+    	  break;
 	  case 2:
 		  featureBuilder.add_property(iterator->first, (iterator->second).get<uint64_t>());
 		break;
@@ -65,19 +68,19 @@ static void handlePolygonFeature(mapbox::geometry::feature<int16_t>& geojsonFeat
 	const auto& polygon = geometry.get<mapbox::geometry::polygon<int16_t>>();
 	vtzero::point previous{polygon[0][0].x + 1, polygon[0][0].y + 2};
 	for (unsigned long j=0; j<polygon.size(); j++) {
-//		cout << "creating a polygon ring of size " << polygon[j].size() << endl;
-		featureBuilder.add_ring(polygon[j].size());
-		for (unsigned long k=0; k<polygon[j].size(); k++) {
-			vtzero::point current_point{polygon[j][k].x, polygon[j][k].y};
-			if (previous.x != current_point.x || previous.y != current_point.y) {
-//				cout << "x " << current_point.x << " y " << current_point.y << endl;
-				featureBuilder.set_point(current_point);
-			}
-			else  {
-//				cout << "two consecutive points are the same. skipping point in polygon [j:" << j << "] k: [" << k << "]" << endl;
-			}
-			previous = current_point;
-		}
+//	  cout << "creating a polygon ring of size " << polygon[j].size() << endl;
+	  featureBuilder.add_ring(polygon[j].size());
+	  for (unsigned long k=0; k<polygon[j].size(); k++) {
+	    vtzero::point current_point{polygon[j][k].x, polygon[j][k].y};
+	    if (previous.x != current_point.x || previous.y != current_point.y) {
+//	      cout << "x " << current_point.x << " y " << current_point.y << endl;
+		  featureBuilder.set_point(current_point);
+	    }
+	    else  {
+//	      cout << "two consecutive points are the same. skipping point in polygon [j:" << j << "] k: [" << k << "]" << endl;
+	    }
+	    previous = current_point;
+	  }
 	}
 	handleFeatureProperties(geojsonFeature, featureBuilder);
 	featureBuilder.commit();
@@ -94,7 +97,7 @@ static void handleLineStringFeature(mapbox::geometry::feature<int16_t>& geojsonF
   featureBuilder.add_linestring(lineString.size());
 
   for (unsigned long j=0; j<lineString.size(); j++) {
-	  featureBuilder.set_point(lineString[j].x, lineString[j].y);
+    featureBuilder.set_point(lineString[j].x, lineString[j].y);
   }
   handleFeatureProperties(geojsonFeature, featureBuilder);
   featureBuilder.commit();
@@ -104,8 +107,8 @@ static void handleFeature(mapbox::geometry::feature<int16_t>& feature, vtzero::l
 
   switch (feature.geometry.which()) {
   case 1:
-	  handleLineStringFeature(feature, defaultLayer);
-	  break;
+	handleLineStringFeature(feature, defaultLayer);
+	break;
   case 2:
 	handlePolygonFeature(feature, defaultLayer);
 	break;
